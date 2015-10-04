@@ -33,17 +33,71 @@ public class MainActivity extends Activity {
      */
 
     // 创建一个helper以便管理数据库
-    ToDoListContract.ToDoListDBHelper mDbHelper;//  = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
-    SQLiteDatabase db;// = mDbHelper.getWritableDatabase();
+    // ToDoListContract.ToDoListDBHelper mDbHelper;//  = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
+    // SQLiteDatabase db;// = mDbHelper.getWritableDatabase();
     // SQLiteDatabase db = new ToDoListContract.ToDoListDBHelper(this).getWritableDatabase();
-
-    String[] todolist = new String[20];
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        refreshToDoListView();
+        // ========== RECOVERY BEGIN
+        ToDoListContract.ToDoListDBHelper mDbHelper = new ToDoListDBHelper(this);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ToDoList.COLUMN_NAME_WHAT_TO_DO, "开通支付宝");
+        values.put(ToDoList.COLUMN_NAME_IS_FINISHED, false);
+        db.insert(ToDoList.TABLE_NAME, null, values);
+
+        values.put(ToDoList.COLUMN_NAME_WHAT_TO_DO, "买草稿");
+        values.put(ToDoList.COLUMN_NAME_IS_FINISHED, false);
+        db.insert(ToDoList.TABLE_NAME, null, values);
+
+        String[] projection = {
+                ToDoList._ID,
+                ToDoList.COLUMN_NAME_WHAT_TO_DO,
+                ToDoList.COLUMN_NAME_IS_FINISHED
+        };
+
+        String sortOrder = ToDoList._ID + " DESC";
+
+        Cursor c = db.query(
+                ToDoList.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                sortOrder
+        );
+
+        String[] todolist = new String[20];
+        int i = 0;
+
+        // 逐条将数据库里的 todoitem 填到 todolist[] 里
+        String todoEntry;
+        if (c.moveToFirst()) {
+            Log.d("AAAAAA", "进入if (c.moveToFirst())");
+            do {
+                todoEntry = c.getString(c.getColumnIndexOrThrow(ToDoList.COLUMN_NAME_WHAT_TO_DO));
+                Log.i("aPP", todoEntry);
+                todolist[i++] = todoEntry;
+            } while (c.moveToNext() && i < 20);
+            Log.d("AAAAAA", "离开if (c.moveToFirst())");
+        }
+        c.close();
+
+        // 设置 adapter 将 todolist 显示在 toDoListView 里
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1, todolist);
+
+        ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
+        toDoListView.setAdapter(adapter);
+        Log.d("AAAAAAAAA", "adapter 已设置");
+
+
+        // ========== RECOVERY END
+        //refreshToDoListView();
 
         Log.i("app", "View refreshed");
     }
@@ -68,6 +122,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    /*
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1 && resultCode == RESULT_OK) {
@@ -75,6 +130,7 @@ public class MainActivity extends Activity {
             Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
         }
     }
+    */
 
     /**
      * 将文本框的内容添加到数据库中
@@ -82,14 +138,18 @@ public class MainActivity extends Activity {
      * @return 是否成功完成
      * @view: 调用此回调的 add 按钮
      */
+    /*
     public void addToDoItem(View view) {
         EditText toDoItemText = (EditText) findViewById(R.id.toDoItemText);
         String text = toDoItemText.getText().toString();
         insertToDoItem(text);
 
-        refreshToDoListView();
+        // ============
+        // refreshToDoListView();
     }
-
+    */
+// ==============
+/*
     void refreshToDoListView() {
         // 尝试从数据库读取信息
         mDbHelper = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
@@ -135,12 +195,14 @@ public class MainActivity extends Activity {
             toDoListView.setAdapter(adapter);
         }
     }
+    */
 
     /**
      * 将 toDoItemText 插入到默认数据库
      * @param toDoItemText
      * @return
      */
+    /*
     long insertToDoItem(String toDoItemText) {
         ContentValues values = new ContentValues();
         values.put(ToDoList.COLUMN_NAME_WHAT_TO_DO, toDoItemText);
@@ -148,6 +210,7 @@ public class MainActivity extends Activity {
 
         return db.insert(ToDoList.TABLE_NAME, null, values);
     }
+    */
 
 }
 

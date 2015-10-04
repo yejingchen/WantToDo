@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">WantToDo</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <!-- Strings in MainActivity -->
+    <string name="add_todo_item">Add</string>
+    <string name="app_settings">Settings</string>
+    <string name="title_activity_add_to_do_item">AddToDoItemActivity</string>
+
+    <!-- Strings in AddToDoItemActivity -->
+    <string name="add_to_do_item_hint">What to do?</string>
+    <string name="save_to_do_item">Save</string>
+</resources>

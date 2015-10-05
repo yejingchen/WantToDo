@@ -23,11 +23,15 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
     private LayoutInflater inflater = null;
     private ListView listView = null;
 
-    private SQLiteDatabase db = null;
+    private Context context = null;
+
+    private SQLiteDatabase db = null; // 在构造器处得到
 
     public ToDoListAdapter(Context context, Cursor c, ListView listView, SQLiteDatabase db) {
         // 我也不知道0是什么玩意儿，反正要一个 int flag
         super(context, c, 0);
+
+        this.context = context;
 
         this.listView = listView;
         this.db = db;
@@ -63,8 +67,33 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
                     ToDoListContract.ToDoList.TABLE_NAME, values,
                     selection, selectionArgs);
         }
+    }
 
-        // refreshUI
+    /**
+     * deletion 操作完成后刷新列表
+     */
+    private void updateUI() {
+        String sortOrder = "_id DESC";
+
+        String[] projection = {
+                ToDoList._ID,
+                ToDoList.COLUMN_NAME_WHAT_TO_DO,
+                ToDoList.COLUMN_NAME_IS_FINISHED
+        };
+        Cursor cursor = db.query(
+                ToDoList.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                sortOrder
+        );
+
+        ToDoListAdapter adapter = new ToDoListAdapter(context, cursor, listView, db);
+        listView.setAdapter(adapter);
+
+        // cursor.close();
     }
 
     @Override
@@ -95,6 +124,9 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
                 String[] selectionArgs = {String.valueOf(dbIDstr)};
 
                 db.delete(ToDoList.TABLE_NAME, selection, selectionArgs);
+
+                // TODO: 15-10-5 deletion 完成后刷新界面
+                updateUI();
             }
         });
         view.setTag(holder);

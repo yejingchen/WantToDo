@@ -21,10 +21,9 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
     private final static String TAG = "ToDoList";
 
     private LayoutInflater inflater = null;
+
     private ListView listView = null;
-
-    private Context context = null;
-
+    private Context context = null; // 同下
     private SQLiteDatabase db = null; // 在构造器处得到
 
     public ToDoListAdapter(Context context, Cursor c, ListView listView, SQLiteDatabase db) {
@@ -42,8 +41,6 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
     // 这里是重点，根据checkbox 设置数据库
     @Override
     public void onCheckedChanged(CompoundButton checkBox, boolean isChecked) {
-        Log.i(TAG, "它喵的终于来到了 onCheckedChanged()");
-        // final int newValue;
         final int position = listView.getPositionForView(checkBox);
 
         if (position != ListView.INVALID_POSITION) {
@@ -53,8 +50,6 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
             View parent = (View) checkBox.getParent();
             TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
             String dbIDstr = idtextview.getText().toString();
-
-            // newValue = isChecked ? 1 : 0;
 
             // 准备要更新的内容
             ContentValues values = new ContentValues();
@@ -92,13 +87,10 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
 
         ToDoListAdapter adapter = new ToDoListAdapter(context, cursor, listView, db);
         listView.setAdapter(adapter);
-
-        // cursor.close();
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        Log.i(TAG, "Inside ToDoListAdapter.newView()");
         // Create and inflate the listView item view here
         View view = inflater.inflate(R.layout.to_do_list_item_layout, parent, false);
 
@@ -117,7 +109,6 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
                 View parent = (View) v.getParent();
                 TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
                 String dbIDstr = idtextview.getText().toString();
-                // long dbID = Integer.getInteger(dbIDstr);
 
                 // 选中要删除行的条件
                 String selection = ToDoList._ID + " LIKE ?";
@@ -125,7 +116,6 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
 
                 db.delete(ToDoList.TABLE_NAME, selection, selectionArgs);
 
-                // TODO: 15-10-5 deletion 完成后刷新界面
                 updateUI();
             }
         });
@@ -148,8 +138,6 @@ public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnChecke
         holder.checkBox.setOnCheckedChangeListener(this);
 
         holder.textView.setText(cursor.getString(cursor.getColumnIndexOrThrow(ToDoList.COLUMN_NAME_WHAT_TO_DO)));
-
-        //Log.e(TAG, cursor.)
     }
 
     private static class ViewHolder {

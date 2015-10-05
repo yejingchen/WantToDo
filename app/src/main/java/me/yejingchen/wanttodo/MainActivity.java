@@ -71,28 +71,6 @@ public class MainActivity extends Activity {
         toDoItemText.setText("");
     }
 
-    /**
-     * 将 todoitem 从数据库移除
-     *
-     * @param view 调用此回调的 view
-     */
-    // TODO: 15-10-5 清除未被使用的 removeToDoItem
-    public void removeToDoItem(View view) {
-        // 获得要删除的数据库 ID
-        View parent = (View) view.getParent();
-        TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
-        String dbIDstr = idtextview.getText().toString();
-        // long dbID = Integer.getInteger(dbIDstr);
-
-        // 选中要删除行的条件
-        String selection = ToDoList._ID + " LIKE ?";
-        String[] selectionArgs = { String.valueOf(dbIDstr) };
-
-        db.delete(ToDoList.TABLE_NAME, selection, selectionArgs);
-
-        refreshToDoListView();
-    }
-
     public void refreshToDoListView() {
         // 尝试从数据库读取信息
         mDbHelper = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
@@ -117,9 +95,6 @@ public class MainActivity extends Activity {
         ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
         ToDoListAdapter adapter = new ToDoListAdapter(MainActivity.this, cursor, toDoListView, db);
         toDoListView.setAdapter(adapter);
-
-        cursor.close();
-        db.close();
     }
 
     /**

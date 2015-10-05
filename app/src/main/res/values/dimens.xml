@@ -3,7 +3,9 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <!-- unused floating action button, maybe add later -->
     <dimen name="fab_button_margin_bottom">16dp</dimen>
     <dimen name="fab_button_margin_right">16dp</dimen>
+
     <dimen name="todoitem_height">64dp</dimen>
 </resources>

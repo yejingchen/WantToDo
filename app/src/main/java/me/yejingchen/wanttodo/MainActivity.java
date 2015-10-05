@@ -2,52 +2,57 @@ package me.yejingchen.wanttodo;
 
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.opengl.EGLExt;
 import android.os.Bundle;
-import android.provider.BaseColumns;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.Chronometer;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.ref.SoftReference;
+import java.sql.RowId;
 import java.util.List;
 
+import me.yejingchen.wanttodo.ToDoItemAdapter;
+
 import static me.yejingchen.wanttodo.ToDoListContract.*;
+import me.yejingchen.wanttodo.ToDoListAdapter;
 
 public class MainActivity extends Activity {
-    /**
-     * Created by yejingchen on 15-10-3.
-     */
-
     // 创建一个helper以便管理数据库
     ToDoListContract.ToDoListDBHelper mDbHelper;//  = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
     SQLiteDatabase db;// = mDbHelper.getWritableDatabase();
     // SQLiteDatabase db = new ToDoListContract.ToDoListDBHelper(this).getWritableDatabase();
+    Cursor c;
+    long last_id_inserted;
 
-    String[] todolist = new String[20];
+    String[] todolist;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         refreshToDoListView();
-
-        Log.i("app", "View refreshed");
     }
 
+    @Override
+    public void onDestroy() {
+        c.close();
+        super.onDestroy();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu items for use in the action bar
@@ -68,24 +73,38 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            String str = data.getStringExtra("todoitemtext");
-            Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
-        }
-    }
-
     /**
      * 将文本框的内容添加到数据库中
      *
-     * @return 是否成功完成
-     * @view: 调用此回调的 add 按钮
+     * @param view : 调用此回调的 add 按钮
      */
     public void addToDoItem(View view) {
         EditText toDoItemText = (EditText) findViewById(R.id.toDoItemText);
         String text = toDoItemText.getText().toString();
-        insertToDoItem(text);
+        last_id_inserted = insertToDoItem(text);
+
+        refreshToDoListView();
+
+        toDoItemText.setText("");
+    }
+
+    /**
+     * 将 todoitem 从数据库移除
+     *
+     * @parw
+     */
+    public void removeToDoItem(View view) {
+        // 获得要删除的数据库 ID
+        View parent = (View) view.getParent();
+        TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
+        String dbIDstr = idtextview.getText().toString();
+        // long dbID = Integer.getInteger(dbIDstr);
+
+        // 选中要删除行的条件
+        String selection = ToDoList._ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(dbIDstr) };
+
+        db.delete(ToDoList.TABLE_NAME, selection, selectionArgs);
 
         refreshToDoListView();
     }
@@ -103,7 +122,7 @@ public class MainActivity extends Activity {
 
         String sortOrder = "_id DESC";
 
-        Cursor c = db.query(
+        c = db.query(
                 ToDoList.TABLE_NAME,
                 projection,
                 null,
@@ -113,16 +132,36 @@ public class MainActivity extends Activity {
                 sortOrder
         );
 
+        /*
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(MainActivity.this,
+                R.layout.to_do_list_item_layout, c,
+                ToDoItemAdapter.fromColumns, ToDoItemAdapter.toViews, 0);
+
+        ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
+        toDoListView.setAdapter(adapter);
+        */
+
+        ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
+        ToDoListAdapter adapter = new ToDoListAdapter(MainActivity.this, c, toDoListView, db);
+        toDoListView.setAdapter(adapter);
+
+        /* 旧版的 ArrayAdapter 方式
         int i = 0;
 
+        // todolist 的大小与 todoitems 的数目相同
+        // 因为取出的数据按逆序排列，所以 moveToFirst 后 ID 是最大的
+        if (c.moveToFirst()) {
+            int tmp = c.getInt(c.getColumnIndexOrThrow(ToDoList._ID));
+            todolist = new String[tmp];
+        } else {
+            todolist = new String[20];
+        }
+
         // 逐条将数据库里的 todoitem 填到 todolist[] 里
-        String todoEntry;
         if (c.moveToFirst()) {
             do {
-                todoEntry = c.getString(c.getColumnIndexOrThrow(ToDoList.COLUMN_NAME_WHAT_TO_DO));
-                Log.i("aPP", todoEntry);
-                todolist[i++] = todoEntry;
-            } while (c.moveToNext() && i < 20);
+                todolist[i++] = c.getString(c.getColumnIndexOrThrow(ToDoList.COLUMN_NAME_WHAT_TO_DO));
+            } while (c.moveToNext());
         }
         c.close();
 
@@ -134,10 +173,12 @@ public class MainActivity extends Activity {
             ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
             toDoListView.setAdapter(adapter);
         }
+        */
     }
 
     /**
      * 将 toDoItemText 插入到默认数据库
+     *
      * @param toDoItemText
      * @return
      */
@@ -149,5 +190,29 @@ public class MainActivity extends Activity {
         return db.insert(ToDoList.TABLE_NAME, null, values);
     }
 
-}
+    // 貌似不可用的 checkbox 回调
+    /* public void onCheckBoxChange(View view) {
+        // 获取 checkbox 状态
+        CheckBox checkBox = (CheckBox) view.findViewById(R.id.ToDoItemFinished);
+        boolean finished = checkBox.isChecked();
+        // 貌似 checkbox 没有改变自己的状态，手动改变一下
+        // checkBox.setChecked(!finished);
 
+        // 获得要更变的数据库 ID
+        View parent = (View) view.getParent();
+        TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
+        String dbIDstr = idtextview.getText().toString();
+
+        // 准备要变更的数据
+        ContentValues values = new ContentValues();
+        values.put(ToDoList.COLUMN_NAME_IS_FINISHED, finished);
+
+        // 找到要变更的条目并更新
+        String selection = ToDoList._ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(dbIDstr) };
+        db.update(ToDoList.TABLE_NAME, values, selection, selectionArgs);
+
+        refreshToDoListView();
+    }
+    */
+}

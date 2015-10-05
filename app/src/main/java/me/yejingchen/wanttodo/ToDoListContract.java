@@ -16,14 +16,16 @@ public final class ToDoListContract {
     }
 
     private static final String TEXT_TYPE = " TEXT";
+    private static final String BOOLEAN_TYPE = " BOOLEAN";
+    private static final String INTEGET_TYPE = " INTEGER";
     private static final String COMMA_SEP = ",";
+
     private static final String SQL_CREATE_TABLE =
             "CREATE TABLE " + ToDoList.TABLE_NAME + " (" +
                     ToDoList._ID + " INTEGER PRIMARY KEY," +
                     ToDoList.COLUMN_NAME_WHAT_TO_DO + TEXT_TYPE + COMMA_SEP +
-                    ToDoList.COLUMN_NAME_IS_FINISHED + TEXT_TYPE +
+                    ToDoList.COLUMN_NAME_IS_FINISHED + INTEGET_TYPE +
                     " )";
-
     private static final String SQL_DELETE_TABLE =
             "DROP TABLE IF EXISTS " + ToDoList.TABLE_NAME;
 

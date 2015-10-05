@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <CheckBox
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:id="@+id/ToDoItemFinished"
+        android:gravity="center_vertical" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="New Text"
+        android:id="@+id/ToDoItemDBID"
+        android:visibility="invisible"
+        android:layout_weight="0" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/ToDoItemText"
+        android:layout_weight="1" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/to_do_item_delete"
+        android:id="@+id/ToDoItemDelete"
+        android:onClick="removeToDoItem" />
+
+</LinearLayout>

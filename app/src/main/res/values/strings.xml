@@ -10,4 +10,7 @@
     <!-- Strings in AddToDoItemActivity -->
     <string name="add_to_do_item_hint">What to do?</string>
     <string name="save_to_do_item">Save</string>
+
+    <!-- ToDoItemLayout -->
+    <string name="to_do_item_delete">Delete</string>
 </resources>

@@ -6,8 +6,7 @@
     <CheckBox
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:id="@+id/ToDoItemFinished"
-        android:gravity="center_vertical" />
+        android:id="@+id/ToDoItemFinished" />
 
     <TextView
         android:layout_width="0dp"
@@ -28,7 +27,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/to_do_item_delete"
-        android:id="@+id/ToDoItemDelete"
-        android:onClick="removeToDoItem" />
+        android:id="@+id/ToDoItemDelete" />
 
 </LinearLayout>

@@ -2,44 +2,30 @@ package me.yejingchen.wanttodo;
 
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.Chronometer;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import java.sql.RowId;
-import java.util.List;
-
-import me.yejingchen.wanttodo.ToDoItemAdapter;
 
 import static me.yejingchen.wanttodo.ToDoListContract.*;
-import me.yejingchen.wanttodo.ToDoListAdapter;
 
 public class MainActivity extends Activity {
     // 创建一个helper以便管理数据库
     ToDoListContract.ToDoListDBHelper mDbHelper;//  = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
     SQLiteDatabase db;// = mDbHelper.getWritableDatabase();
     // SQLiteDatabase db = new ToDoListContract.ToDoListDBHelper(this).getWritableDatabase();
-    Cursor c;
+    Cursor cursor;
     long last_id_inserted;
 
-    String[] todolist;
+    // 旧版 ArrayAdapter 时用的数组
+    // String[] todolist;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +36,8 @@ public class MainActivity extends Activity {
 
     @Override
     public void onDestroy() {
-        c.close();
+        db.close();
+        cursor.close();
         super.onDestroy();
     }
     @Override
@@ -91,7 +78,7 @@ public class MainActivity extends Activity {
     /**
      * 将 todoitem 从数据库移除
      *
-     * @parw
+     * @param view 调用此回调的 view
      */
     public void removeToDoItem(View view) {
         // 获得要删除的数据库 ID
@@ -109,20 +96,18 @@ public class MainActivity extends Activity {
         refreshToDoListView();
     }
 
-    void refreshToDoListView() {
+    public void refreshToDoListView() {
         // 尝试从数据库读取信息
         mDbHelper = new ToDoListContract.ToDoListDBHelper(MainActivity.this);
         db = mDbHelper.getWritableDatabase();
+        String sortOrder = "_id DESC";
 
         String[] projection = {
                 ToDoList._ID,
                 ToDoList.COLUMN_NAME_WHAT_TO_DO,
                 ToDoList.COLUMN_NAME_IS_FINISHED
         };
-
-        String sortOrder = "_id DESC";
-
-        c = db.query(
+        cursor = db.query(
                 ToDoList.TABLE_NAME,
                 projection,
                 null,
@@ -132,17 +117,17 @@ public class MainActivity extends Activity {
                 sortOrder
         );
 
-        /*
+/*
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(MainActivity.this,
                 R.layout.to_do_list_item_layout, c,
                 ToDoItemAdapter.fromColumns, ToDoItemAdapter.toViews, 0);
 
         ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
         toDoListView.setAdapter(adapter);
-        */
+*/
 
         ListView toDoListView = (ListView) findViewById(R.id.toDoListView);
-        ToDoListAdapter adapter = new ToDoListAdapter(MainActivity.this, c, toDoListView, db);
+        ToDoListAdapter adapter = new ToDoListAdapter(MainActivity.this, cursor, toDoListView, db);
         toDoListView.setAdapter(adapter);
 
         /* 旧版的 ArrayAdapter 方式
@@ -179,8 +164,8 @@ public class MainActivity extends Activity {
     /**
      * 将 toDoItemText 插入到默认数据库
      *
-     * @param toDoItemText
-     * @return
+     * @param toDoItemText 代办事项的文字
+     * @return 新增的条目在数据库的编号
      */
     long insertToDoItem(String toDoItemText) {
         ContentValues values = new ContentValues();

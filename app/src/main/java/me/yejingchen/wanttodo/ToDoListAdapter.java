@@ -17,16 +17,13 @@ import android.widget.TextView;
 import me.yejingchen.wanttodo.ToDoListContract;
 import me.yejingchen.wanttodo.ToDoListContract.*;
 
-public class ToDoListAdapter extends CursorAdapter implements CheckBox.OnCheckedChangeListener {
+public class ToDoListAdapter extends CursorAdapter implements  CheckBox.OnCheckedChangeListener {
     private final static String TAG = "ToDoList";
 
     private LayoutInflater inflater = null;
     private ListView listView = null;
 
     private SQLiteDatabase db = null;
-    private ContentValues values = null;
-
-    private boolean isCompleted = false;
 
     public ToDoListAdapter(Context context, Cursor c, ListView listView, SQLiteDatabase db) {
         // 我也不知道0是什么玩意儿，反正要一个 int flag
@@ -41,13 +38,14 @@ public class ToDoListAdapter extends CursorAdapter implements CheckBox.OnChecked
     // 这里是重点，根据checkbox 设置数据库
     @Override
     public void onCheckedChanged(CompoundButton checkBox, boolean isChecked) {
+        Log.i(TAG, "它喵的终于来到了 onCheckedChanged()");
         // final int newValue;
         final int position = listView.getPositionForView(checkBox);
 
         if (position != ListView.INVALID_POSITION) {
             checkBox.setChecked(isChecked);
 
-            // 获得要更变的数据库 ID
+            // 获得要更变的数据库条目 ID
             View parent = (View) checkBox.getParent();
             TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
             String dbIDstr = idtextview.getText().toString();
@@ -55,7 +53,7 @@ public class ToDoListAdapter extends CursorAdapter implements CheckBox.OnChecked
             // newValue = isChecked ? 1 : 0;
 
             // 准备要更新的内容
-            values = new ContentValues();
+            ContentValues values = new ContentValues();
             values.put(ToDoListContract.ToDoList.COLUMN_NAME_IS_FINISHED, isChecked);
 
             // 找到要变更的条目并更新
@@ -78,47 +76,28 @@ public class ToDoListAdapter extends CursorAdapter implements CheckBox.OnChecked
         ViewHolder holder = new ViewHolder();
 
         holder.checkBox = (CheckBox) view.findViewById(R.id.ToDoItemFinished);
+        holder.idTextView = (TextView) view.findViewById(R.id.ToDoItemDBID);
         holder.textView = (TextView) view.findViewById(R.id.ToDoItemText);
         holder.button = (Button) view.findViewById(R.id.ToDoItemDelete);
 
-        // holder.checkBox.setOnCheckedChangeListener(this);
-        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        holder.checkBox.setOnCheckedChangeListener(this);
+        holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // final int newValue;
-                final int position = listView.getPositionForView(buttonView);
-                Log.i(TAG, "Inside onCheckedChanged()");
-                Log.i(TAG, "checkbox position=" + position + ", ListView.INVALID_POSITION=" + ListView.INVALID_POSITION);
+            public void onClick(View v) {
+                // 获得要删除的数据库 ID
+                View parent = (View) v.getParent();
+                TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
+                String dbIDstr = idtextview.getText().toString();
+                // long dbID = Integer.getInteger(dbIDstr);
 
-                if (position != ListView.INVALID_POSITION) {
-                    Log.i(TAG, "checkbox position=" + position + ", ListView.INVALID_POSITION=" + ListView.INVALID_POSITION);
-                    buttonView.setChecked(isChecked);
+                // 选中要删除行的条件
+                String selection = ToDoList._ID + " LIKE ?";
+                String[] selectionArgs = {String.valueOf(dbIDstr)};
 
-                    // 获得要更变的数据库 ID
-                    View parent = (View) buttonView.getParent();
-                    TextView idtextview = (TextView) parent.findViewById(R.id.ToDoItemDBID);
-                    String dbIDstr = idtextview.getText().toString();
-
-                    // newValue = isChecked ? 1 : 0;
-
-                    // 准备要更新的内容
-                    values = new ContentValues();
-                    values.put(ToDoListContract.ToDoList.COLUMN_NAME_IS_FINISHED, isChecked);
-
-                    // 找到要变更的条目并更新
-                    String selection = ToDoListContract.ToDoList._ID + " LIKE ?";
-                    String[] selectionArgs = { String.valueOf(dbIDstr) };
-                    db.update(
-                            ToDoListContract.ToDoList.TABLE_NAME, values,
-                            selection, selectionArgs);
-                }
-
-                // refreshUI
+                db.delete(ToDoList.TABLE_NAME, selection, selectionArgs);
             }
         });
-
         view.setTag(holder);
-
         return view;
     }
 
@@ -127,10 +106,12 @@ public class ToDoListAdapter extends CursorAdapter implements CheckBox.OnChecked
         ViewHolder holder = (ViewHolder) view.getTag();
         int tmp;
 
+        holder.idTextView.setText(cursor.getString(cursor.getColumnIndexOrThrow(ToDoList._ID)));;
+
         // 将 cursor 中的数据绑定到返回的 view 中
         holder.checkBox.setOnCheckedChangeListener(null);
         tmp = cursor.getInt(cursor.getColumnIndexOrThrow(ToDoList.COLUMN_NAME_IS_FINISHED));
-        isCompleted = (tmp > 0);
+        boolean isCompleted = (tmp > 0);
         holder.checkBox.setChecked(isCompleted);
         holder.checkBox.setOnCheckedChangeListener(this);
 
@@ -141,6 +122,7 @@ public class ToDoListAdapter extends CursorAdapter implements CheckBox.OnChecked
 
     private static class ViewHolder {
         CheckBox checkBox;
+        TextView idTextView;
         TextView textView;
         Button button;
     }
